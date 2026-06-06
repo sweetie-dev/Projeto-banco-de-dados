@@ -37,7 +37,7 @@ export async function POST(request: Request) {
         user_id: userId,
         score,
         comment: comment || '',
-        created_at: new Date()
+        created_at: new Date().toISOString()
       }
     });
     

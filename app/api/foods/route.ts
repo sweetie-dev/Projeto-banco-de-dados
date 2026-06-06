@@ -43,7 +43,8 @@ export async function POST(request: Request) {
         price,
         image_url: image_url || null,
         display_order,
-        userId
+        userId,
+        created_at: new Date().toISOString()
       }
     });
     

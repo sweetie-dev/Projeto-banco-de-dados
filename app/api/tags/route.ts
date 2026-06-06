@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     const result = await prisma.tag.create({
       data: {
         name,
-        created_at: new Date()
+        created_at: new Date().toISOString()
       }
     });
     

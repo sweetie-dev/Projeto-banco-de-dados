@@ -24,6 +24,7 @@ export async function POST(request: Request) {
         email,
         username,
         password: hashedPassword,
+        created_at: new Date().toISOString()
       }
     });
 

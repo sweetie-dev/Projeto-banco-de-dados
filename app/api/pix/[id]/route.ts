@@ -18,7 +18,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       },
       data: {
         pix_key: pixKey,
-        merchant_name: merchantName
+        merchant_name: merchantName,
+        updated_at: new Date().toISOString()
       }
     });
     

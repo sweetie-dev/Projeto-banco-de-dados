@@ -31,7 +31,8 @@ export async function POST(request: Request) {
       data: {
         food_id,
         payment_method,
-        userId
+        userId,
+        created_at: new Date().toISOString()
       }
     });
     

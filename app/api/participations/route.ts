@@ -36,7 +36,7 @@ export async function POST(request: Request) {
         event_id,
         user_id: userId,
         status,
-        registered_at: new Date()
+        registered_at: new Date().toISOString()
       }
     });
     

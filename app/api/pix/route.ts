@@ -30,7 +30,8 @@ export async function POST(request: Request) {
       data: {
         pix_key: pixKey,
         merchant_name: merchantName,
-        userId
+        userId,
+        updated_at: new Date().toISOString()
       }
     });
     

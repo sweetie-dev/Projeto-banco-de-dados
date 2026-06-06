@@ -37,8 +37,8 @@ export async function POST(request: Request) {
         location_id,
         category_id,
         tag_ids,
-        start_date: new Date(start_date),
-        end_date: new Date(end_date),
+        start_date: String(start_date),
+        end_date: String(end_date),
         price,
         capacity
       }
