@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "mongodb"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -118,7 +119,7 @@ model Comment {
 
 model Participation {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  status        String   @default("pending") // 'pending' | 'confirmed' | 'cancelled'
+  status        String   @default("pending")
   registered_at DateTime @default(now())
 
   event_id String @db.ObjectId

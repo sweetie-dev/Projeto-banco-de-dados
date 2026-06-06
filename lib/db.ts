@@ -10,7 +10,6 @@ if (!mongoUri) {
 // Concatena o nome do banco à URI para o Prisma, se fornecido
 const getFullUri = () => {
   if (!dbName) return mongoUri;
-  // Verifica se a URI já termina com / para evitar duplicação
   const base = mongoUri.endsWith('/') ? mongoUri.slice(0, -1) : mongoUri;
   return `${base}/${dbName}?authSource=admin`;
 };
