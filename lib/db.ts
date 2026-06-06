@@ -1,48 +1,37 @@
-import { MongoClient, ObjectId } from 'mongodb';
+import { PrismaClient } from '@prisma/client';
 
 const mongoUri = process.env.MONGODB_URI;
-const dbName = process.env.MONGODB_DB ?? 'controle_vendas';
 
 if (!mongoUri) {
   throw new Error('MONGODB_URI está faltando no ambiente.');
 }
 
-const options = {};
+const createPrismaClient = () => {
+  return new PrismaClient({
+    datasourceUrl: mongoUri,
+  });
+};
 
-let client: MongoClient;
-let clientPromise: Promise<MongoClient>;
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
 
-if (process.env.NODE_ENV === 'development') {
-  const globalWithMongo = globalThis as typeof globalThis & {
-    _mongoClientPromise?: Promise<MongoClient>;
-  };
+export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 
-  if (!globalWithMongo._mongoClientPromise) {
-    client = new MongoClient(mongoUri, options);
-    globalWithMongo._mongoClientPromise = client.connect();
-  }
-  clientPromise = globalWithMongo._mongoClientPromise;
-} else {
-  client = new MongoClient(mongoUri, options);
-  clientPromise = client.connect();
-}
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
+// Export getDb for backward compatibility during migration if needed
 export async function getDb() {
-  const connectedClient = await clientPromise;
-  return connectedClient.db(dbName);
+  const { MongoClient } = await import('mongodb');
+  const mongoClient = new MongoClient(mongoUri!);
+  await mongoClient.connect();
+  return mongoClient.db(process.env.MONGODB_DB ?? 'controle_vendas');
 }
 
-export function toObjectId(id: string): ObjectId | any {
-  try {
-    return new ObjectId(id);
-  } catch {
-    return null;
-  }
-}
-
+// Helper to normalize Prisma objects to match existing frontend expectations
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function normalizeDocument(doc: any) {
   if (!doc) return null;
-  const { _id, password, ...rest } = doc;
-  return { id: _id.toString(), ...rest };
+  const { password, ...rest } = doc;
+  return { ...rest };
 }

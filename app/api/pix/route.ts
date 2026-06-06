@@ -1,14 +1,21 @@
 import { NextResponse } from 'next/server';
-import { getDb, normalizeDocument } from '@/lib/db';
+import { prisma, normalizeDocument } from '@/lib/db';
 import { authenticate } from '@/lib/auth';
 
 export async function GET(request: Request) {
   const userId = authenticate(request);
   if (!userId) return NextResponse.json({ message: 'Não autorizado.' }, { status: 401 });
   
-  const db = await getDb();
-  const docs = await db.collection('pix_config').find({ user_id: userId }).sort({ updated_at: -1 }).limit(1).toArray();
-  return NextResponse.json(docs.length > 0 ? normalizeDocument(docs[0]) : null);
+  try {
+    const doc = await prisma.pixConfig.findFirst({
+      where: { userId },
+      orderBy: { updated_at: 'desc' }
+    });
+    return NextResponse.json(doc ? normalizeDocument(doc) : null);
+  } catch (error) {
+    console.error('[PIX GET Error]:', error);
+    return NextResponse.json({ message: 'Erro interno' }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -19,14 +26,17 @@ export async function POST(request: Request) {
     const { pixKey, merchantName } = await request.json();
     if (!pixKey || !merchantName) return NextResponse.json({ message: 'Dados inválidos do PIX.' }, { status: 400 });
     
-    const db = await getDb();
-    const result = await db.collection('pix_config').insertOne({
-      pix_key: pixKey, 
-      merchant_name: merchantName, 
-      user_id: userId, // Associa a config ao usuário
-      updated_at: new Date().toISOString()
+    const doc = await prisma.pixConfig.create({
+      data: {
+        pix_key: pixKey,
+        merchant_name: merchantName,
+        userId
+      }
     });
-    const doc = await db.collection('pix_config').findOne({ _id: result.insertedId });
+    
     return NextResponse.json(normalizeDocument(doc), { status: 201 });
-  } catch (error) { return NextResponse.json({ message: 'Erro interno' }, { status: 500 }); }
+  } catch (error) {
+    console.error('[PIX POST Error]:', error);
+    return NextResponse.json({ message: 'Erro interno' }, { status: 500 });
+  }
 }

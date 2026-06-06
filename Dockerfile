@@ -11,6 +11,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Prisma generation
+RUN npx prisma generate
+
 # Use ARG for build-time placeholder variables (safer than ENV)
 ARG MONGODB_URI="mongodb://localhost:27017/dummy"
 ARG MONGODB_DB="dummy"

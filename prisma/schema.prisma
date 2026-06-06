@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+}
+
+model User {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  email      String   @unique
+  username   String
+  password   String
+  role       String   @default("user")
+  created_at DateTime @default(now())
+
+  foods      Food[]
+  sales      Sale[]
+  pixConfigs PixConfig[]
+
+  @@map("users")
+}
+
+model Food {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  price         Float
+  image_url     String?
+  display_order Int
+  created_at    DateTime @default(now())
+  
+  userId        String   @db.ObjectId @map("user_id")
+  user          User     @relation(fields: [userId], references: [id])
+
+  sales         Sale[]
+
+  @@map("foods")
+}
+
+model Sale {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  food_id        String   @db.ObjectId
+  payment_method String
+  created_at     DateTime @default(now())
+
+  userId         String   @db.ObjectId @map("user_id")
+  user           User     @relation(fields: [userId], references: [id])
+  
+  food           Food     @relation(fields: [food_id], references: [id])
+
+  @@map("sales")
+}
+
+model PixConfig {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  pix_key       String
+  merchant_name String
+  updated_at    DateTime @updatedAt
+
+  userId        String   @db.ObjectId @map("user_id")
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@map("pix_config")
+}
