@@ -10,6 +10,12 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+# Set placeholder env vars for build-time (they are not used for actual DB connection during build)
+ENV MONGODB_URI="mongodb://localhost:27017/dummy"
+ENV MONGODB_DB="dummy"
+ENV JWT_SECRET="dummy"
+
 RUN npm run build
 
 # Stage 3: Runner
