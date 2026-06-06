@@ -17,7 +17,7 @@ services:
       - "traefik.http.routers.event-food-sales.tls.certresolver=myresolver"
       - "traefik.http.services.event-food-sales.loadbalancer.server.port=3000"
     networks:
-      - traefik-public
+      - traefik-net
 
 secrets:
   MONGODB_URI:
@@ -30,5 +30,5 @@ secrets:
     external: true
 
 networks:
-  traefik-public:
+  traefik-net:
     external: true
