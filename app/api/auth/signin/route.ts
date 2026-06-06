@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { prisma, normalizeDocument } from '@/lib/db';
+import { getDb, normalizeDocument, toObjectId } from '@/lib/db';
 import { createToken } from '@/lib/auth';
 
 export async function POST(request: Request) {
@@ -10,9 +10,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Email e senha são obrigatórios.' }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email }
-    });
+    const db = await getDb();
+    const user = await db.collection('users').findOne({ email });
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return NextResponse.json({ message: 'Credenciais inválidas.' }, { status: 401 });

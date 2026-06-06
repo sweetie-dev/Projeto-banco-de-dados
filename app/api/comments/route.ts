@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma, normalizeDocument } from '@/lib/db';
+import { getDb, normalizeDocument } from '@/lib/db';
 import { authenticate } from '@/lib/auth';
 
 export async function GET(request: Request) {
@@ -7,10 +7,10 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const event_id = url.searchParams.get('event_id');
   
-  const docs = await prisma.comment.findMany({
-    where: event_id ? { event_id } : {},
-    orderBy: { created_at: 'desc' }
-  });
+  const db = await getDb();
+  const filter = event_id ? { event_id } : {};
+  const docs = await db.collection('comments').find(filter).sort({ created_at: -1 }).toArray();
+  
   return NextResponse.json(docs.map(normalizeDocument));
 }
 
@@ -20,14 +20,18 @@ export async function POST(request: Request) {
   try {
     const { event_id, content } = await request.json();
     if (!event_id || !content) return NextResponse.json({ message: 'Dados do comentário são obrigatórios.' }, { status: 400 });
-    const doc = await prisma.comment.create({
-      data: {
-        event_id,
-        user_id: userId,
-        content
-      }
-    });
-    return NextResponse.json(normalizeDocument(doc), { status: 201 });
+    
+    const db = await getDb();
+    const doc = {
+      event_id,
+      user_id: userId,
+      content,
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+    
+    const result = await db.collection('comments').insertOne(doc);
+    return NextResponse.json(normalizeDocument({ ...doc, _id: result.insertedId }), { status: 201 });
   } catch (error) {
     return NextResponse.json({ message: 'Erro interno' }, { status: 500 });
   }

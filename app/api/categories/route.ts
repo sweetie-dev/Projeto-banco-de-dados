@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-import { prisma, normalizeDocument } from '@/lib/db';
+import { getDb, normalizeDocument } from '@/lib/db';
 import { authenticate } from '@/lib/auth';
 
 export async function GET(request: Request) {
   if (!authenticate(request)) return NextResponse.json({ message: 'Não autorizado.' }, { status: 401 });
-  const docs = await prisma.category.findMany({
-    orderBy: { name: 'asc' }
-  });
+  const db = await getDb();
+  const docs = await db.collection('categories').find().sort({ name: 1 }).toArray();
   return NextResponse.json(docs.map(normalizeDocument));
 }
 
@@ -15,10 +14,17 @@ export async function POST(request: Request) {
   try {
     const { name, description } = await request.json();
     if (!name) return NextResponse.json({ message: 'Nome da categoria é obrigatório.' }, { status: 400 });
-    const doc = await prisma.category.create({
-      data: { name, description: description || '' }
-    });
-    return NextResponse.json(normalizeDocument(doc), { status: 201 });
+    
+    const db = await getDb();
+    const doc = {
+      name,
+      description: description || '',
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+    
+    const result = await db.collection('categories').insertOne(doc);
+    return NextResponse.json(normalizeDocument({ ...doc, _id: result.insertedId }), { status: 201 });
   } catch (error) {
     return NextResponse.json({ message: 'Erro interno' }, { status: 500 });
   }

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma, normalizeDocument } from '@/lib/db';
+import { getDb, normalizeDocument, toObjectId } from '@/lib/db';
 import { authenticate } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -8,15 +8,12 @@ export async function GET(request: Request) {
   const userId = authenticate(request);
   if (!userId) return NextResponse.json({ message: 'Não autorizado.' }, { status: 401 });
   
-  console.log(`[Prisma] Listando produtos para o usuário: ${userId}`);
-  
   try {
-    const docs = await prisma.food.findMany({
-      where: { userId },
-      orderBy: { display_order: 'asc' }
-    });
-    
-    console.log(`[Prisma] Encontrados ${docs.length} produtos.`);
+    const db = await getDb();
+    const docs = await db.collection('foods')
+      .find({ user_id: userId })
+      .sort({ display_order: 1 })
+      .toArray();
     
     return NextResponse.json(docs.map(normalizeDocument));
   } catch (error) {
@@ -35,20 +32,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Dados inválidos do produto.' }, { status: 400 });
     }
     
-    console.log(`[Prisma] Criando produto "${name}" para o usuário: ${userId}`);
+    const db = await getDb();
+    const food = {
+      name,
+      price,
+      image_url: image_url || null,
+      display_order,
+      user_id: userId,
+      created_at: new Date().toISOString()
+    };
     
-    const doc = await prisma.food.create({
-      data: {
-        name,
-        price,
-        image_url: image_url || null,
-        display_order,
-        userId,
-        created_at: new Date().toISOString()
-      }
-    });
+    const result = await db.collection('foods').insertOne(food);
+    const savedDoc = { ...food, _id: result.insertedId };
     
-    return NextResponse.json(normalizeDocument(doc), { status: 201 });
+    return NextResponse.json(normalizeDocument(savedDoc), { status: 201 });
   } catch (error) {
     console.error('[Foods POST Error]:', error);
     return NextResponse.json({ message: 'Erro interno' }, { status: 500 });

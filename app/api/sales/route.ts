@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma, normalizeDocument } from '@/lib/db';
+import { getDb, normalizeDocument } from '@/lib/db';
 import { authenticate } from '@/lib/auth';
 
 export async function GET(request: Request) {
@@ -7,10 +7,11 @@ export async function GET(request: Request) {
   if (!userId) return NextResponse.json({ message: 'Não autorizado.' }, { status: 401 });
   
   try {
-    const docs = await prisma.sale.findMany({
-      where: { userId },
-      orderBy: { created_at: 'desc' }
-    });
+    const db = await getDb();
+    const docs = await db.collection('sales')
+      .find({ user_id: userId })
+      .sort({ created_at: -1 })
+      .toArray();
     return NextResponse.json(docs.map(normalizeDocument));
   } catch (error) {
     console.error('[Sales GET Error]:', error);
@@ -26,16 +27,18 @@ export async function POST(request: Request) {
     const { food_id, payment_method } = await request.json();
     if (!food_id || !payment_method) return NextResponse.json({ message: 'Dados inválidos da venda.' }, { status: 400 });
     
-    const doc = await prisma.sale.create({
-      data: {
-        food_id,
-        payment_method,
-        userId,
-        created_at: new Date().toISOString()
-      }
-    });
+    const db = await getDb();
+    const sale = {
+      food_id,
+      payment_method,
+      user_id: userId,
+      created_at: new Date().toISOString()
+    };
     
-    return NextResponse.json(normalizeDocument(doc), { status: 201 });
+    const result = await db.collection('sales').insertOne(sale);
+    const savedDoc = { ...sale, _id: result.insertedId };
+    
+    return NextResponse.json(normalizeDocument(savedDoc), { status: 201 });
   } catch (error) {
     console.error('[Sales POST Error]:', error);
     return NextResponse.json({ message: 'Erro interno' }, { status: 500 });

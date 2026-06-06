@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma, normalizeDocument } from '@/lib/db';
+import { getDb, normalizeDocument, toObjectId } from '@/lib/db';
 import { authenticate } from '@/lib/auth';
 
 export async function GET(request: Request) {
@@ -7,9 +7,8 @@ export async function GET(request: Request) {
     const userId = authenticate(request);
     if (!userId) return NextResponse.json({ message: 'Não autorizado.' }, { status: 401 });
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId }
-    });
+    const db = await getDb();
+    const user = await db.collection('users').findOne({ _id: toObjectId(userId) });
     
     if (!user) {
       return NextResponse.json({ message: 'Usuário não encontrado.' }, { status: 404 });

@@ -1,42 +1,51 @@
-import { PrismaClient } from '@prisma/client';
+import { MongoClient, ObjectId } from 'mongodb';
 
 const mongoUri = process.env.MONGODB_URI;
-const dbName = process.env.MONGODB_DB;
+const dbName = process.env.MONGODB_DB || 'controle_vendas';
 
 if (!mongoUri) {
   throw new Error('MONGODB_URI está faltando no ambiente.');
 }
 
-// Concatena o nome do banco à URI para o Prisma, se fornecido
 const getFullUri = () => {
-  if (!dbName) return mongoUri;
   const base = mongoUri.endsWith('/') ? mongoUri.slice(0, -1) : mongoUri;
-  return `${base}/${dbName}?authSource=admin&directConnection=true&retryWrites=false`;
+  return `${base}/${dbName}?authSource=admin`;
 };
 
-const createPrismaClient = () => {
-  return new PrismaClient({
-    datasources: {
-      db: {
-        url: getFullUri(),
-      },
-    },
-  });
+let client: MongoClient;
+let clientPromise: Promise<MongoClient>;
+
+const globalWithMongo = globalThis as typeof globalThis & {
+  _mongoClientPromise?: Promise<MongoClient>;
 };
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
+if (process.env.NODE_ENV === 'development') {
+  if (!globalWithMongo._mongoClientPromise) {
+    client = new MongoClient(getFullUri());
+    globalWithMongo._mongoClientPromise = client.connect();
+  }
+  clientPromise = globalWithMongo._mongoClientPromise;
+} else {
+  client = new MongoClient(getFullUri());
+  clientPromise = client.connect();
+}
 
-// Force fresh build to ensure Prisma Client matches schema String change
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+export async function getDb() {
+  const connectedClient = await clientPromise;
+  return connectedClient.db(dbName);
+}
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+export function toObjectId(id: string) {
+  try {
+    return new ObjectId(id);
+  } catch {
+    return undefined;
+  }
+}
 
-// Helper to normalize Prisma objects to match existing frontend expectations
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function normalizeDocument(doc: any) {
   if (!doc) return null;
-  const { password, ...rest } = doc;
-  return { ...rest };
+  const { _id, password, ...rest } = doc;
+  return { id: _id.toString(), ...rest };
 }

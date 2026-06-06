@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-import { prisma, normalizeDocument } from '@/lib/db';
+import { getDb, normalizeDocument } from '@/lib/db';
 import { authenticate } from '@/lib/auth';
 
 export async function GET(request: Request) {
   if (!authenticate(request)) return NextResponse.json({ message: 'Não autorizado.' }, { status: 401 });
-  const docs = await prisma.location.findMany({
-    orderBy: { name: 'asc' }
-  });
+  const db = await getDb();
+  const docs = await db.collection('locations').find().sort({ name: 1 }).toArray();
   return NextResponse.json(docs.map(normalizeDocument));
 }
 
@@ -17,10 +16,20 @@ export async function POST(request: Request) {
     if (!name || !address || !city || !state || !zip_code) {
       return NextResponse.json({ message: 'Dados completos do local são obrigatórios.' }, { status: 400 });
     }
-    const doc = await prisma.location.create({
-      data: { name, address, city, state, zip_code }
-    });
-    return NextResponse.json(normalizeDocument(doc), { status: 201 });
+    
+    const db = await getDb();
+    const doc = {
+      name,
+      address,
+      city,
+      state,
+      zip_code,
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+    
+    const result = await db.collection('locations').insertOne(doc);
+    return NextResponse.json(normalizeDocument({ ...doc, _id: result.insertedId }), { status: 201 });
   } catch (error) {
     return NextResponse.json({ message: 'Erro interno' }, { status: 500 });
   }
