@@ -11,10 +11,14 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Set placeholder env vars for build-time (they are not used for actual DB connection during build)
-ENV MONGODB_URI="mongodb://localhost:27017/dummy"
-ENV MONGODB_DB="dummy"
-ENV JWT_SECRET="dummy"
+# Use ARG for build-time placeholder variables (safer than ENV)
+ARG MONGODB_URI="mongodb://localhost:27017/dummy"
+ARG MONGODB_DB="dummy"
+ARG JWT_SECRET="dummy"
+# Export them as ENV for the build process only
+ENV MONGODB_URI=$MONGODB_URI
+ENV MONGODB_DB=$MONGODB_DB
+ENV JWT_SECRET=$JWT_SECRET
 
 RUN npm run build
 
@@ -27,6 +31,7 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+# Copy public folder if it exists
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
