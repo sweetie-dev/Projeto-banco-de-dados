@@ -16,7 +16,7 @@ function getJwtSecret() {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createToken(user: any) {
-  return jwt.sign({ userId: user._id.toString() }, getJwtSecret(), { expiresIn: '7d' });
+  return jwt.sign({ userId: (user.id || user._id).toString() }, getJwtSecret(), { expiresIn: '7d' });
 }
 
 export function authenticate(request: Request) {

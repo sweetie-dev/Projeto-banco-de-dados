@@ -9,8 +9,7 @@ export async function GET(request: Request) {
   try {
     const docs = await prisma.sale.findMany({
       where: { userId },
-      orderBy: { created_at: 'desc' },
-      include: { food: true } // Opcional: já traz os dados do produto junto
+      orderBy: { created_at: 'desc' }
     });
     return NextResponse.json(docs.map(normalizeDocument));
   } catch (error) {

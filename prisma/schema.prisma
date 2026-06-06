@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "mongodb"
-  url      = env("DATABASE_URL")
+  url      = env("MONGODB_URI")
 }
 
 model User {
@@ -13,16 +13,7 @@ model User {
   username   String
   password   String
   role       String   @default("user")
-  created_at String   @default(cuid()) // Mudado para String
-
-  foods          Food[]
-  sales          Sale[]
-  pixConfigs     PixConfig[]
-  organizers     Organizer[]
-  comments       Comment[]
-  participations Participation[]
-  ratings        Rating[]
-  notifications  Notification[]
+  created_at String   @default(cuid())
 
   @@map("users")
 }
@@ -32,12 +23,8 @@ model Organizer {
   organization_name String?
   bio               String?
   website           String?
-  created_at        String   @default(cuid()) // Mudado para String
-
-  userId String @db.ObjectId @map("user_id")
-  user   User   @relation(fields: [userId], references: [id])
-
-  events Event[]
+  created_at        String   @default(cuid())
+  userId            String   @db.ObjectId @map("user_id")
 
   @@map("organizers")
 }
@@ -46,9 +33,7 @@ model Category {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   name        String
   description String?
-  created_at  String   @default(cuid()) // Mudado para String
-
-  events Event[]
+  created_at  String   @default(cuid())
 
   @@map("categories")
 }
@@ -56,7 +41,7 @@ model Category {
 model Tag {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   name       String
-  created_at String   @default(cuid()) // Mudado para String
+  created_at String   @default(cuid())
 
   @@map("tags")
 }
@@ -68,37 +53,24 @@ model Location {
   city       String
   state      String
   zip_code   String
-  created_at String   @default(cuid()) // Mudado para String
-
-  events Event[]
+  created_at String   @default(cuid())
 
   @@map("locations")
 }
 
 model Event {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  title       String
-  description String
-  start_date  String   // Mudado para String
-  end_date    String   // Mudado para String
-  price       Float
-  capacity    Int
-  created_at  String   @default(cuid()) // Mudado para String
-
-  organizer_id String    @db.ObjectId
-  organizer    Organizer @relation(fields: [organizer_id], references: [id])
-
-  location_id String   @db.ObjectId
-  location    Location @relation(fields: [location_id], references: [id])
-
-  category_id String   @db.ObjectId
-  category    Category @relation(fields: [category_id], references: [id])
-
-  tag_ids String[] @db.ObjectId
-
-  comments       Comment[]
-  participations Participation[]
-  ratings        Rating[]
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  title        String
+  description  String
+  start_date   String
+  end_date     String
+  price        Float
+  capacity     Int
+  created_at   String   @default(cuid())
+  organizer_id String   @db.ObjectId
+  location_id  String   @db.ObjectId
+  category_id  String   @db.ObjectId
+  tag_ids      String[] @db.ObjectId
 
   @@map("events")
 }
@@ -106,97 +78,73 @@ model Event {
 model Comment {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   content    String
-  created_at String   @default(cuid()) // Mudado para String
-
-  event_id String @db.ObjectId
-  event    Event  @relation(fields: [event_id], references: [id])
-
-  user_id String @db.ObjectId
-  user    User   @relation(fields: [user_id], references: [id])
+  created_at String   @default(cuid())
+  event_id   String   @db.ObjectId
+  user_id    String   @db.ObjectId
 
   @@map("comments")
 }
 
 model Participation {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  status        String   @default("pending")
-  registered_at String   @default(cuid()) // Mudado para String
-
-  event_id String @db.ObjectId
-  event    Event  @relation(fields: [event_id], references: [id])
-
-  user_id String @db.ObjectId
-  user    User   @relation(fields: [user_id], references: [id])
+  id            String @id @default(auto()) @map("_id") @db.ObjectId
+  status        String @default("pending")
+  registered_at String @default(cuid())
+  event_id      String @db.ObjectId
+  user_id       String @db.ObjectId
 
   @@map("participations")
 }
 
 model Rating {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  id         String  @id @default(auto()) @map("_id") @db.ObjectId
   score      Int
   comment    String?
-  created_at String   @default(cuid()) // Mudado para String
-
-  event_id String @db.ObjectId
-  event    Event  @relation(fields: [event_id], references: [id])
-
-  user_id String @db.ObjectId
-  user    User   @relation(fields: [user_id], references: [id])
+  created_at String  @default(cuid())
+  event_id   String  @db.ObjectId
+  user_id    String  @db.ObjectId
 
   @@map("ratings")
 }
 
 model Notification {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  id         String  @id @default(auto()) @map("_id") @db.ObjectId
   title      String
   message    String
-  read       Boolean  @default(false)
-  created_at String   @default(cuid()) // Mudado para String
-
-  user_id String @db.ObjectId
-  user    User   @relation(fields: [user_id], references: [id])
+  read       Boolean @default(false)
+  created_at String  @default(cuid())
+  user_id    String  @db.ObjectId
 
   @@map("notifications")
 }
 
 model Food {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  id            String  @id @default(auto()) @map("_id") @db.ObjectId
   name          String
   price         Float
   image_url     String?
   display_order Int
-  created_at    String   @default(cuid()) // Mudado para String
-
-  userId String @db.ObjectId @map("user_id")
-  user   User   @relation(fields: [userId], references: [id])
-
-  sales Sale[]
+  created_at    String  @default(cuid())
+  userId        String  @db.ObjectId @map("user_id")
 
   @@map("foods")
 }
 
 model Sale {
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  food_id        String   @db.ObjectId
+  id             String @id @default(auto()) @map("_id") @db.ObjectId
+  food_id        String @db.ObjectId
   payment_method String
-  created_at     String   @default(cuid()) // Mudado para String
-
-  userId String @db.ObjectId @map("user_id")
-  user   User   @relation(fields: [userId], references: [id])
-
-  food Food @relation(fields: [food_id], references: [id])
+  created_at     String @default(cuid())
+  userId         String @db.ObjectId @map("user_id")
 
   @@map("sales")
 }
 
 model PixConfig {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  id            String @id @default(auto()) @map("_id") @db.ObjectId
   pix_key       String
   merchant_name String
-  updated_at    String   @default(cuid()) // Mudado para String
-
-  userId String @db.ObjectId @map("user_id")
-  user   User   @relation(fields: [userId], references: [id])
+  updated_at    String @default(cuid())
+  userId        String @db.ObjectId @map("user_id")
 
   @@map("pix_config")
 }
