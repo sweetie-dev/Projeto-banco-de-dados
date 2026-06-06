@@ -1,6 +1,15 @@
 # Created by https://www.toptal.com/developers/gitignore/api/nextjs
 # Edit at https://www.toptal.com/developers/gitignore?templates=nextjs
 
+# IDE Specifics
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
 ### NextJS ###
 # dependencies
 /node_modules

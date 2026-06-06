@@ -1,0 +1,37 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: event-food-sales:latest
+    container_name: event-food-sales
+    restart: always
+    expose:
+      - 3000
+    secrets:
+      - MONGODB_URI
+      - MONGODB_DB
+      - JWT_SECRET
+      - APP_DOMAIN
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.event-food-sales.rule=Host(`${APP_DOMAIN:-vendas.exemplo.com}`)"
+      - "traefik.http.routers.event-food-sales.entrypoints=websecure"
+      - "traefik.http.routers.event-food-sales.tls.certresolver=myresolver"
+      - "traefik.http.services.event-food-sales.loadbalancer.server.port=3000"
+    networks:
+      - traefik-public
+
+secrets:
+  MONGODB_URI:
+    external: true
+  MONGODB_DB:
+    external: true
+  JWT_SECRET:
+    external: true
+  APP_DOMAIN:
+    external: true
+
+networks:
+  traefik-public:
+    external: true
