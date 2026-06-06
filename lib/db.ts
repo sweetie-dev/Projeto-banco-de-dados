@@ -1,14 +1,23 @@
 import { PrismaClient } from '@prisma/client';
 
 const mongoUri = process.env.MONGODB_URI;
+const dbName = process.env.MONGODB_DB;
 
 if (!mongoUri) {
   throw new Error('MONGODB_URI está faltando no ambiente.');
 }
 
+// Concatena o nome do banco à URI para o Prisma, se fornecido
+const getFullUri = () => {
+  if (!dbName) return mongoUri;
+  // Verifica se a URI já termina com / para evitar duplicação
+  const base = mongoUri.endsWith('/') ? mongoUri.slice(0, -1) : mongoUri;
+  return `${base}/${dbName}?authSource=admin`;
+};
+
 const createPrismaClient = () => {
   return new PrismaClient({
-    datasourceUrl: mongoUri,
+    datasourceUrl: getFullUri(),
   });
 };
 

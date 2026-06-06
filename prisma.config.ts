@@ -9,6 +9,13 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["MONGODB_URI"],
+    url: (() => {
+      const uri = process.env["MONGODB_URI"];
+      const db = process.env["MONGODB_DB"];
+      if (!uri) return "";
+      if (!db) return uri;
+      const base = uri.endsWith("/") ? uri.slice(0, -1) : uri;
+      return `${base}/${db}?authSource=admin`;
+    })(),
   },
 });
