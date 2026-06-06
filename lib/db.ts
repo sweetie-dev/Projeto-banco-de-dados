@@ -17,7 +17,11 @@ const getFullUri = () => {
 
 const createPrismaClient = () => {
   return new PrismaClient({
-    datasourceUrl: getFullUri(),
+    datasources: {
+      db: {
+        url: getFullUri(),
+      },
+    },
   });
 };
 
