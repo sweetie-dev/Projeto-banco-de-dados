@@ -14,11 +14,148 @@ model User {
   role       String   @default("user")
   created_at DateTime @default(now())
 
-  foods      Food[]
-  sales      Sale[]
-  pixConfigs PixConfig[]
+  foods          Food[]
+  sales          Sale[]
+  pixConfigs     PixConfig[]
+  organizers     Organizer[]
+  comments       Comment[]
+  participations Participation[]
+  ratings        Rating[]
+  notifications  Notification[]
 
   @@map("users")
+}
+
+model Organizer {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  organization_name String?
+  bio               String?
+  website           String?
+  created_at        DateTime @default(now())
+
+  userId String @db.ObjectId @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+
+  events Event[]
+
+  @@map("organizers")
+}
+
+model Category {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  created_at  DateTime @default(now())
+
+  events Event[]
+
+  @@map("categories")
+}
+
+model Tag {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  name       String
+  created_at DateTime @default(now())
+
+  @@map("tags")
+}
+
+model Location {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  name       String
+  address    String
+  city       String
+  state      String
+  zip_code   String
+  created_at DateTime @default(now())
+
+  events Event[]
+
+  @@map("locations")
+}
+
+model Event {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  start_date  DateTime
+  end_date    DateTime
+  price       Float
+  capacity    Int
+  created_at  DateTime @default(now())
+
+  organizer_id String    @db.ObjectId
+  organizer    Organizer @relation(fields: [organizer_id], references: [id])
+
+  location_id String   @db.ObjectId
+  location    Location @relation(fields: [location_id], references: [id])
+
+  category_id String   @db.ObjectId
+  category    Category @relation(fields: [category_id], references: [id])
+
+  tag_ids String[] @db.ObjectId
+
+  comments       Comment[]
+  participations Participation[]
+  ratings        Rating[]
+
+  @@map("events")
+}
+
+model Comment {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  content    String
+  created_at DateTime @default(now())
+
+  event_id String @db.ObjectId
+  event    Event  @relation(fields: [event_id], references: [id])
+
+  user_id String @db.ObjectId
+  user    User   @relation(fields: [user_id], references: [id])
+
+  @@map("comments")
+}
+
+model Participation {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  status        String   @default("pending") // 'pending' | 'confirmed' | 'cancelled'
+  registered_at DateTime @default(now())
+
+  event_id String @db.ObjectId
+  event    Event  @relation(fields: [event_id], references: [id])
+
+  user_id String @db.ObjectId
+  user    User   @relation(fields: [user_id], references: [id])
+
+  @@map("participations")
+}
+
+model Rating {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  score      Int
+  comment    String?
+  created_at DateTime @default(now())
+
+  event_id String @db.ObjectId
+  event    Event  @relation(fields: [event_id], references: [id])
+
+  user_id String @db.ObjectId
+  user    User   @relation(fields: [user_id], references: [id])
+
+  @@map("ratings")
+}
+
+model Notification {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  title      String
+  message    String
+  read       Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  user_id String @db.ObjectId
+  user    User   @relation(fields: [user_id], references: [id])
+
+  @@map("notifications")
 }
 
 model Food {
@@ -28,11 +165,11 @@ model Food {
   image_url     String?
   display_order Int
   created_at    DateTime @default(now())
-  
-  userId        String   @db.ObjectId @map("user_id")
-  user          User     @relation(fields: [userId], references: [id])
 
-  sales         Sale[]
+  userId String @db.ObjectId @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+
+  sales Sale[]
 
   @@map("foods")
 }
@@ -43,10 +180,10 @@ model Sale {
   payment_method String
   created_at     DateTime @default(now())
 
-  userId         String   @db.ObjectId @map("user_id")
-  user           User     @relation(fields: [userId], references: [id])
-  
-  food           Food     @relation(fields: [food_id], references: [id])
+  userId String @db.ObjectId @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+
+  food Food @relation(fields: [food_id], references: [id])
 
   @@map("sales")
 }
@@ -57,8 +194,8 @@ model PixConfig {
   merchant_name String
   updated_at    DateTime @updatedAt
 
-  userId        String   @db.ObjectId @map("user_id")
-  user          User     @relation(fields: [userId], references: [id])
+  userId String @db.ObjectId @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
 
   @@map("pix_config")
 }

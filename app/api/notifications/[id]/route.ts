@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getDb, normalizeDocument, toObjectId } from '@/lib/db';
+import { prisma, normalizeDocument } from '@/lib/db';
 import { authenticate } from '@/lib/auth';
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -8,11 +8,23 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const { id } = await params;
   try {
     const { read } = await request.json();
-    const db = await getDb();
-    const result = await db.collection('notifications').findOneAndUpdate(
-      { _id: toObjectId(id), user_id: userId }, { $set: { read: Boolean(read) } }, { returnDocument: 'after' }
-    );
-    if (!result) return NextResponse.json({ message: 'Notificação não encontrada.' }, { status: 404 });
-    return NextResponse.json(normalizeDocument(result));
-  } catch (error) { return NextResponse.json({ message: 'Erro interno' }, { status: 500 }); }
+    
+    // Using updateMany to ensure data isolation (filtering by user_id)
+    const result = await prisma.notification.updateMany({
+      where: { id, user_id: userId },
+      data: { read: Boolean(read) }
+    });
+
+    if (result.count === 0) {
+      return NextResponse.json({ message: 'Notificação não encontrada.' }, { status: 404 });
+    }
+
+    const doc = await prisma.notification.findUnique({
+      where: { id }
+    });
+
+    return NextResponse.json(normalizeDocument(doc));
+  } catch (error) {
+    return NextResponse.json({ message: 'Erro interno' }, { status: 500 });
+  }
 }

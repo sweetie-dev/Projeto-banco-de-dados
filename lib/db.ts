@@ -29,14 +29,6 @@ export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
-// Export getDb for backward compatibility during migration if needed
-export async function getDb() {
-  const { MongoClient } = await import('mongodb');
-  const mongoClient = new MongoClient(mongoUri!);
-  await mongoClient.connect();
-  return mongoClient.db(process.env.MONGODB_DB ?? 'controle_vendas');
-}
-
 // Helper to normalize Prisma objects to match existing frontend expectations
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function normalizeDocument(doc: any) {
