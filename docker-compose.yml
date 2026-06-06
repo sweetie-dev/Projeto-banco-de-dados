@@ -5,11 +5,11 @@ services:
     restart: always
     expose:
       - 3000
-    secrets:
-      - MONGODB_URI
-      - MONGODB_DB
-      - JWT_SECRET
-      - APP_DOMAIN
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
+      - MONGODB_DB=${MONGODB_DB}
+      - JWT_SECRET=${JWT_SECRET}
+      - APP_DOMAIN=${APP_DOMAIN}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.event-food-sales.rule=Host(`${APP_DOMAIN:-vendas.exemplo.com}`)"
@@ -18,16 +18,6 @@ services:
       - "traefik.http.services.event-food-sales.loadbalancer.server.port=3000"
     networks:
       - traefik-net
-
-secrets:
-  MONGODB_URI:
-    external: true
-  MONGODB_DB:
-    external: true
-  JWT_SECRET:
-    external: true
-  APP_DOMAIN:
-    external: true
 
 networks:
   traefik-net:
