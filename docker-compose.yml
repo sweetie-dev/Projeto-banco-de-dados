@@ -1,9 +1,6 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: event-food-sales:latest
+    image: ghcr.io/sweetie-dev/projeto-banco-de-dados:latest
     container_name: event-food-sales
     restart: always
     expose:
