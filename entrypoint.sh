@@ -6,13 +6,11 @@ load_secret() {
     local secret_file="/run/secrets/$name"
     if [ -f "$secret_file" ]; then
         export "$name"=$(cat "$secret_file")
-        echo "Loaded secret: $name"
-    else
-        echo "Secret not found: $name"
+        # Keep silent if loaded to avoid log noise, or use a debug flag
     fi
 }
 
-# Load required secrets
+# Load required secrets (if they exist from Docker Secrets)
 load_secret "MONGODB_URI"
 load_secret "MONGODB_DB"
 load_secret "JWT_SECRET"
