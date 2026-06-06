@@ -3,7 +3,9 @@ import { getDb, normalizeDocument, toObjectId } from '@/lib/db';
 import { authenticate } from '@/lib/auth';
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!authenticate(request)) return NextResponse.json({ message: 'Não autorizado.' }, { status: 401 });
+  const userId = authenticate(request);
+  if (!userId) return NextResponse.json({ message: 'Não autorizado.' }, { status: 401 });
+  
   const { id } = await params;
   try {
     const { name, price, image_url } = await request.json();
@@ -11,20 +13,29 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     
     const db = await getDb();
     const result = await db.collection('foods').findOneAndUpdate(
-      { _id: toObjectId(id) },
+      { _id: toObjectId(id), user_id: userId }, // Verifica se o produto pertence ao usuário
       { $set: { name, price, image_url: image_url || null } },
       { returnDocument: 'after' }
     );
-    if (!result) return NextResponse.json({ message: 'Produto não encontrado.' }, { status: 404 });
+    if (!result) return NextResponse.json({ message: 'Produto não encontrado ou acesso negado.' }, { status: 404 });
     return NextResponse.json(normalizeDocument(result));
   } catch (error) { return NextResponse.json({ message: 'Erro interno' }, { status: 500 }); }
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!authenticate(request)) return NextResponse.json({ message: 'Não autorizado.' }, { status: 401 });
+  const userId = authenticate(request);
+  if (!userId) return NextResponse.json({ message: 'Não autorizado.' }, { status: 401 });
+  
   const { id } = await params;
   const db = await getDb();
-  await db.collection('foods').deleteOne({ _id: toObjectId(id) });
-  await db.collection('sales').deleteMany({ food_id: id });
-  return NextResponse.json({ success: true });
+  
+  // Só deleta se o produto pertencer ao usuário
+  const result = await db.collection('foods').deleteOne({ _id: toObjectId(id), user_id: userId });
+  
+  if (result.deletedCount > 0) {
+    await db.collection('sales').deleteMany({ food_id: id });
+    return NextResponse.json({ success: true });
+  }
+  
+  return NextResponse.json({ message: 'Produto não encontrado ou acesso negado.' }, { status: 404 });
 }
