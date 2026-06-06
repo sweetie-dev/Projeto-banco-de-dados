@@ -11,7 +11,7 @@ if (!mongoUri) {
 const getFullUri = () => {
   if (!dbName) return mongoUri;
   const base = mongoUri.endsWith('/') ? mongoUri.slice(0, -1) : mongoUri;
-  return `${base}/${dbName}?authSource=admin`;
+  return `${base}/${dbName}?authSource=admin&directConnection=true&retryWrites=false`;
 };
 
 const createPrismaClient = () => {
