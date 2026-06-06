@@ -2,10 +2,6 @@ import { NextResponse } from 'next/server';
 import { getDb, normalizeDocument } from '@/lib/db';
 import { authenticate } from '@/lib/auth';
 
-import { NextResponse } from 'next/server';
-import { getDb, normalizeDocument } from '@/lib/db';
-import { authenticate } from '@/lib/auth';
-
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
