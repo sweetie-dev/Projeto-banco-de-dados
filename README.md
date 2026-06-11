@@ -2,6 +2,12 @@
 
 Um sistema moderno e responsivo para gestão de vendas de comida em eventos, agora migrado para **Next.js 15** com **App Router**.
 
+## 🎓 Alunos
+- André David Tavares Rodrigues Mendes - `04182774`
+- Lidia Enedina Monteiro Tapajós - `04184708`
+- Yasmim Trindade Souza - `04181465`
+- Emily Nivea Monteiro da Silva - `04193064`
+- Julia Caroline de Moura Barbosa - `04191539`
 ## 🚀 Tecnologias
 
 - **Frontend/Backend**: [Next.js 15](https://nextjs.org/) (App Router)
