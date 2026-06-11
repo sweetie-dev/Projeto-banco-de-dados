@@ -8,6 +8,7 @@ Um sistema moderno e responsivo para gestão de vendas de comida em eventos, ago
 - Yasmim Trindade Souza - `04181465`
 - Emily Nivea Monteiro da Silva - `04193064`
 - Julia Caroline de Moura Barbosa - `04191539`
+- Milena Kamily Aragao de Souza - `04180528`
 ## 🚀 Tecnologias
 
 - **Frontend/Backend**: [Next.js 15](https://nextjs.org/) (App Router)
